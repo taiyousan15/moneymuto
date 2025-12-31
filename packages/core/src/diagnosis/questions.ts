@@ -6,7 +6,7 @@ import type { DiagnosisConfig, Question, QuestionOption } from './types';
 
 // 質問設定を取得
 export function getQuestions(config: DiagnosisConfig): Question[] {
-  return config.questions.sort((a, b) => a.order - b.order);
+  return [...config.questions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 // 質問を取得

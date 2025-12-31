@@ -12,7 +12,7 @@ import type {
 import { getQuestion, getOption } from './questions';
 
 /**
- * 回答からスコアを計算
+ * 回答からスコアを計算（生の合計スコアを返す）
  */
 export function calculateScores(config: DiagnosisConfig, answers: Answer[]): Scores {
   const totalScores: Scores = {
@@ -21,8 +21,6 @@ export function calculateScores(config: DiagnosisConfig, answers: Answer[]): Sco
     knowledge: 0,
     action: 0,
   };
-
-  let validAnswers = 0;
 
   for (const answer of answers) {
     const question = getQuestion(config, answer.questionId);
@@ -35,21 +33,9 @@ export function calculateScores(config: DiagnosisConfig, answers: Answer[]): Sco
     totalScores.growth += option.scores.growth;
     totalScores.knowledge += option.scores.knowledge;
     totalScores.action += option.scores.action;
-    validAnswers++;
   }
 
-  // 最大スコア（各質問10点 × 質問数）で正規化して0-100にする
-  const maxPossible = validAnswers * 10;
-  if (maxPossible === 0) {
-    return { safety: 0, growth: 0, knowledge: 0, action: 0 };
-  }
-
-  return {
-    safety: Math.round((totalScores.safety / maxPossible) * 100),
-    growth: Math.round((totalScores.growth / maxPossible) * 100),
-    knowledge: Math.round((totalScores.knowledge / maxPossible) * 100),
-    action: Math.round((totalScores.action / maxPossible) * 100),
-  };
+  return totalScores;
 }
 
 /**
@@ -57,24 +43,24 @@ export function calculateScores(config: DiagnosisConfig, answers: Answer[]): Sco
  */
 export function determineType(scores: Scores): DiagnosisType {
   // 優先順位:
-  // 1. 学習派: 知識スコアが40%未満
-  // 2. 堅実派: 安全性スコアが70%以上
-  // 3. 積極派: 成長性スコアが70%以上
+  // 1. 学習派: 知識スコアが30未満
+  // 2. 堅実派: 安全性スコアが60以上
+  // 3. 積極派: 成長性スコアが60以上
   // 4. バランス派: それ以外
 
-  if (scores.knowledge < 40) {
-    return 'learner';
+  if (scores.knowledge < 30) {
+    return { id: 'learner', name: '学習派', description: '知識が必要', advice: [] };
   }
 
-  if (scores.safety >= 70) {
-    return 'conservative';
+  if (scores.safety >= 60) {
+    return { id: 'conservative', name: '堅実派', description: '安全性重視', advice: [] };
   }
 
-  if (scores.growth >= 70) {
-    return 'aggressive';
+  if (scores.growth >= 60) {
+    return { id: 'aggressive', name: '積極派', description: '成長性重視', advice: [] };
   }
 
-  return 'balanced';
+  return { id: 'balanced', name: 'バランス派', description: 'バランス重視', advice: [] };
 }
 
 /**
@@ -82,14 +68,20 @@ export function determineType(scores: Scores): DiagnosisType {
  */
 export function runDiagnosis(config: DiagnosisConfig, answers: Answer[]): DiagnosisResult {
   const scores = calculateScores(config, answers);
-  const type = determineType(scores);
-  const typeInfo = config.types[type];
+  const typeResult = determineType(scores);
+
+  // configからタイプ情報を取得（より詳細なアドバイスがある場合）
+  const configType = config.types.find((t) => t.id === typeResult.id);
+  const advice = configType?.advice || typeResult.advice;
 
   return {
-    type,
-    typeName: typeInfo.name,
+    id: crypto.randomUUID(),
+    type: typeResult.id,
+    typeName: configType?.name || typeResult.name,
     scores,
-    advice: typeInfo.advice,
+    advice,
+    linkCode: generateLinkCode(),
+    linkCodeExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   };
 }
 
