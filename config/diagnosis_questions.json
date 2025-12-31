@@ -1,0 +1,321 @@
+{
+  "version": "1.0.0",
+  "questions": [
+    {
+      "id": "q1",
+      "order": 1,
+      "text": "ボーナスが入ったら、まず何をしますか？",
+      "options": [
+        {
+          "id": "q1_a",
+          "text": "すぐに銀行の定期預金に入れる",
+          "scores": { "safety": 10, "growth": 2, "knowledge": 5, "action": 4 }
+        },
+        {
+          "id": "q1_b",
+          "text": "投資信託や株式を購入する",
+          "scores": { "safety": 3, "growth": 10, "knowledge": 7, "action": 8 }
+        },
+        {
+          "id": "q1_c",
+          "text": "半分は貯金、半分は投資",
+          "scores": { "safety": 6, "growth": 6, "knowledge": 6, "action": 6 }
+        },
+        {
+          "id": "q1_d",
+          "text": "よくわからないのでそのまま普通預金に",
+          "scores": { "safety": 5, "growth": 1, "knowledge": 2, "action": 2 }
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "order": 2,
+      "text": "「投資」という言葉を聞いて、最初に思い浮かぶイメージは？",
+      "options": [
+        {
+          "id": "q2_a",
+          "text": "お金が減るかもしれない怖いもの",
+          "scores": { "safety": 8, "growth": 2, "knowledge": 3, "action": 3 }
+        },
+        {
+          "id": "q2_b",
+          "text": "お金を増やすためのツール",
+          "scores": { "safety": 4, "growth": 9, "knowledge": 7, "action": 7 }
+        },
+        {
+          "id": "q2_c",
+          "text": "リスクもあるが将来のために必要なこと",
+          "scores": { "safety": 6, "growth": 6, "knowledge": 6, "action": 5 }
+        },
+        {
+          "id": "q2_d",
+          "text": "正直よくわからない",
+          "scores": { "safety": 4, "growth": 2, "knowledge": 1, "action": 2 }
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "order": 3,
+      "text": "100万円を5年間運用するとしたら、どの選択肢を選びますか？",
+      "options": [
+        {
+          "id": "q3_a",
+          "text": "元本保証で年利0.1%の定期預金",
+          "scores": { "safety": 10, "growth": 1, "knowledge": 4, "action": 3 }
+        },
+        {
+          "id": "q3_b",
+          "text": "リスクはあるが年利5%が期待できる投資信託",
+          "scores": { "safety": 3, "growth": 10, "knowledge": 7, "action": 8 }
+        },
+        {
+          "id": "q3_c",
+          "text": "50万円ずつ分けて両方に",
+          "scores": { "safety": 6, "growth": 6, "knowledge": 7, "action": 6 }
+        },
+        {
+          "id": "q3_d",
+          "text": "決められない・わからない",
+          "scores": { "safety": 4, "growth": 1, "knowledge": 2, "action": 1 }
+        }
+      ]
+    },
+    {
+      "id": "q4",
+      "order": 4,
+      "text": "「複利」という言葉の意味を知っていますか？",
+      "options": [
+        {
+          "id": "q4_a",
+          "text": "よく知っていて活用している",
+          "scores": { "safety": 5, "growth": 7, "knowledge": 10, "action": 8 }
+        },
+        {
+          "id": "q4_b",
+          "text": "聞いたことはあるが詳しくは知らない",
+          "scores": { "safety": 5, "growth": 4, "knowledge": 5, "action": 4 }
+        },
+        {
+          "id": "q4_c",
+          "text": "初めて聞いた",
+          "scores": { "safety": 4, "growth": 2, "knowledge": 1, "action": 3 }
+        },
+        {
+          "id": "q4_d",
+          "text": "知っているが特に意識していない",
+          "scores": { "safety": 5, "growth": 5, "knowledge": 7, "action": 3 }
+        }
+      ]
+    },
+    {
+      "id": "q5",
+      "order": 5,
+      "text": "投資で10%の損失が出たら、どうしますか？",
+      "options": [
+        {
+          "id": "q5_a",
+          "text": "すぐに売却して損失を確定する",
+          "scores": { "safety": 8, "growth": 3, "knowledge": 4, "action": 6 }
+        },
+        {
+          "id": "q5_b",
+          "text": "むしろ買い増しのチャンスと考える",
+          "scores": { "safety": 2, "growth": 10, "knowledge": 8, "action": 9 }
+        },
+        {
+          "id": "q5_c",
+          "text": "様子を見ながら判断する",
+          "scores": { "safety": 6, "growth": 5, "knowledge": 6, "action": 5 }
+        },
+        {
+          "id": "q5_d",
+          "text": "パニックになりそう",
+          "scores": { "safety": 5, "growth": 1, "knowledge": 2, "action": 2 }
+        }
+      ]
+    },
+    {
+      "id": "q6",
+      "order": 6,
+      "text": "毎月の収入のうち、貯蓄・投資に回している割合は？",
+      "options": [
+        {
+          "id": "q6_a",
+          "text": "20%以上",
+          "scores": { "safety": 7, "growth": 7, "knowledge": 6, "action": 9 }
+        },
+        {
+          "id": "q6_b",
+          "text": "10-20%",
+          "scores": { "safety": 6, "growth": 6, "knowledge": 5, "action": 7 }
+        },
+        {
+          "id": "q6_c",
+          "text": "10%未満",
+          "scores": { "safety": 5, "growth": 4, "knowledge": 4, "action": 5 }
+        },
+        {
+          "id": "q6_d",
+          "text": "ほとんどできていない",
+          "scores": { "safety": 4, "growth": 2, "knowledge": 3, "action": 2 }
+        }
+      ]
+    },
+    {
+      "id": "q7",
+      "order": 7,
+      "text": "NISAやiDeCoについてどのくらい知っていますか？",
+      "options": [
+        {
+          "id": "q7_a",
+          "text": "すでに活用している",
+          "scores": { "safety": 5, "growth": 8, "knowledge": 10, "action": 10 }
+        },
+        {
+          "id": "q7_b",
+          "text": "知っているが使っていない",
+          "scores": { "safety": 5, "growth": 5, "knowledge": 7, "action": 4 }
+        },
+        {
+          "id": "q7_c",
+          "text": "名前は聞いたことがある程度",
+          "scores": { "safety": 4, "growth": 3, "knowledge": 3, "action": 3 }
+        },
+        {
+          "id": "q7_d",
+          "text": "全く知らない",
+          "scores": { "safety": 4, "growth": 1, "knowledge": 1, "action": 2 }
+        }
+      ]
+    },
+    {
+      "id": "q8",
+      "order": 8,
+      "text": "老後の資金について考えたことはありますか？",
+      "options": [
+        {
+          "id": "q8_a",
+          "text": "具体的な計画を立てている",
+          "scores": { "safety": 7, "growth": 7, "knowledge": 8, "action": 10 }
+        },
+        {
+          "id": "q8_b",
+          "text": "漠然と不安を感じている",
+          "scores": { "safety": 5, "growth": 4, "knowledge": 4, "action": 4 }
+        },
+        {
+          "id": "q8_c",
+          "text": "まだ先のことなのであまり考えていない",
+          "scores": { "safety": 4, "growth": 3, "knowledge": 3, "action": 2 }
+        },
+        {
+          "id": "q8_d",
+          "text": "年金があるから大丈夫だと思う",
+          "scores": { "safety": 6, "growth": 2, "knowledge": 2, "action": 3 }
+        }
+      ]
+    },
+    {
+      "id": "q9",
+      "order": 9,
+      "text": "金融に関する情報はどこから得ていますか？",
+      "options": [
+        {
+          "id": "q9_a",
+          "text": "経済ニュースや専門書を定期的にチェック",
+          "scores": { "safety": 5, "growth": 7, "knowledge": 10, "action": 8 }
+        },
+        {
+          "id": "q9_b",
+          "text": "SNSやYouTubeで見かけたら見る",
+          "scores": { "safety": 4, "growth": 5, "knowledge": 5, "action": 5 }
+        },
+        {
+          "id": "q9_c",
+          "text": "銀行や保険の営業から聞く程度",
+          "scores": { "safety": 6, "growth": 3, "knowledge": 3, "action": 4 }
+        },
+        {
+          "id": "q9_d",
+          "text": "特に意識して情報収集していない",
+          "scores": { "safety": 4, "growth": 2, "knowledge": 2, "action": 2 }
+        }
+      ]
+    },
+    {
+      "id": "q10",
+      "order": 10,
+      "text": "今後、お金について学びたいと思いますか？",
+      "options": [
+        {
+          "id": "q10_a",
+          "text": "ぜひ学びたい",
+          "scores": { "safety": 5, "growth": 7, "knowledge": 5, "action": 10 }
+        },
+        {
+          "id": "q10_b",
+          "text": "時間があれば学びたい",
+          "scores": { "safety": 5, "growth": 5, "knowledge": 4, "action": 6 }
+        },
+        {
+          "id": "q10_c",
+          "text": "必要になったら考える",
+          "scores": { "safety": 5, "growth": 3, "knowledge": 3, "action": 3 }
+        },
+        {
+          "id": "q10_d",
+          "text": "あまり興味がない",
+          "scores": { "safety": 4, "growth": 2, "knowledge": 2, "action": 1 }
+        }
+      ]
+    }
+  ],
+  "types": {
+    "conservative": {
+      "name": "堅実派",
+      "description": "リスクを避け、安全性を重視するタイプ",
+      "advice": [
+        "定期預金だけでなく、個人向け国債も検討してみましょう",
+        "インフレリスクを意識して、資産の一部は運用に回すことも大切です",
+        "つみたてNISAは少額から始められる低リスクな選択肢です"
+      ]
+    },
+    "balanced": {
+      "name": "バランス派",
+      "description": "リスクとリターンのバランスを重視するタイプ",
+      "advice": [
+        "分散投資の考え方は正しいです。さらに効率的な配分を学びましょう",
+        "定期的なリバランスで資産配分を維持することが重要です",
+        "目標に合わせたポートフォリオ設計を検討しましょう"
+      ]
+    },
+    "aggressive": {
+      "name": "積極派",
+      "description": "高いリターンを求め、リスクを取るタイプ",
+      "advice": [
+        "リスク管理も投資の重要な要素です。損切りラインを決めておきましょう",
+        "レバレッジ商品には特に注意が必要です",
+        "長期投資の観点も持つと、より安定した成果が期待できます"
+      ]
+    },
+    "learner": {
+      "name": "学習派",
+      "description": "まだ知識は少ないが、学ぶ意欲があるタイプ",
+      "advice": [
+        "まずは金融の基礎用語を理解することから始めましょう",
+        "少額からつみたてNISAを始めて、実践しながら学ぶのがおすすめです",
+        "信頼できる情報源を見つけて、定期的に学習する習慣をつけましょう"
+      ]
+    }
+  },
+  "scoring": {
+    "typeThresholds": {
+      "conservative": { "safety": 70 },
+      "aggressive": { "growth": 70 },
+      "learner": { "knowledge": 40 },
+      "balanced": { "default": true }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "version": "1.0.0",
+  "feeds": [
+    {
+      "id": "nikkei_market",
+      "name": "日経マーケット",
+      "url": "https://www.nikkei.com/rss/market.xml",
+      "category": "market",
+      "priority": 1,
+      "enabled": true
+    },
+    {
+      "id": "nikkei_economy",
+      "name": "日経経済",
+      "url": "https://www.nikkei.com/rss/economy.xml",
+      "category": "economy",
+      "priority": 1,
+      "enabled": true
+    },
+    {
+      "id": "bloomberg_japan",
+      "name": "Bloomberg Japan",
+      "url": "https://www.bloomberg.co.jp/rss/sitemap_index.xml",
+      "category": "market",
+      "priority": 2,
+      "enabled": true
+    },
+    {
+      "id": "reuters_business",
+      "name": "Reuters Business",
+      "url": "https://jp.reuters.com/rssfeed/businessNews",
+      "category": "business",
+      "priority": 2,
+      "enabled": true
+    },
+    {
+      "id": "zuu_online",
+      "name": "ZUU online",
+      "url": "https://zuuonline.com/rss",
+      "category": "investment",
+      "priority": 3,
+      "enabled": true
+    }
+  ],
+  "categories": {
+    "market": {
+      "name": "マーケット",
+      "targetTypes": ["aggressive", "balanced"]
+    },
+    "economy": {
+      "name": "経済",
+      "targetTypes": ["conservative", "balanced", "aggressive", "learner"]
+    },
+    "business": {
+      "name": "ビジネス",
+      "targetTypes": ["balanced", "aggressive"]
+    },
+    "investment": {
+      "name": "投資入門",
+      "targetTypes": ["learner", "conservative"]
+    }
+  },
+  "settings": {
+    "maxArticlesPerFeed": 5,
+    "maxArticlesPerDigest": 3,
+    "fetchIntervalHours": 6,
+    "summaryMaxLength": 200
+  }
+}

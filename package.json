@@ -1,0 +1,38 @@
+{
+  "name": "money-onboarding",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter @money-onboarding/web dev\" \"pnpm --filter @money-onboarding/worker dev\"",
+    "build": "pnpm -r build",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "db:generate": "cd db && npx prisma generate",
+    "db:migrate": "cd db && npx prisma migrate dev",
+    "db:seed": "npx tsx db/seed.ts",
+    "db:studio": "cd db && npx prisma studio",
+    "clean": "rm -rf node_modules .turbo && pnpm -r exec rm -rf node_modules .turbo"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "concurrently": "^9.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

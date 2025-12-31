@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ユーザー
+model User {
+  id                String    @id @default(uuid())
+  lineUserId        String?   @unique @map("line_user_id")
+  displayName       String?   @map("display_name")
+  diagnosisId       String?   @unique @map("diagnosis_id")
+  linkCode          String?   @unique @map("link_code")
+  linkCodeExpiresAt DateTime? @map("link_code_expires_at")
+  stepDay           Int       @default(0) @map("step_day")
+  lastStepAt        DateTime? @map("last_step_at")
+  status            UserStatus @default(pending)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  diagnosis     Diagnosis?     @relation(fields: [diagnosisId], references: [id])
+  deliveryLogs  DeliveryLog[]
+
+  @@index([status, stepDay])
+  @@map("users")
+}
+
+enum UserStatus {
+  pending
+  linked
+  unfollowed
+}
+
+// 診断結果
+model Diagnosis {
+  id        String   @id @default(uuid())
+  type      DiagnosisType
+  scores    Json
+  answers   Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User?
+
+  @@index([type])
+  @@index([createdAt])
+  @@map("diagnoses")
+}
+
+enum DiagnosisType {
+  conservative
+  balanced
+  aggressive
+  learner
+}
+
+// 配信ログ
+model DeliveryLog {
+  id      String   @id @default(uuid())
+  userId  String   @map("user_id")
+  type    DeliveryType
+  day     Int?
+  content String
+  sentAt  DateTime @default(now()) @map("sent_at")
+  status  DeliveryStatus
+  error   String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, type])
+  @@index([sentAt])
+  @@map("delivery_logs")
+}
+
+enum DeliveryType {
+  step
+  digest
+}
+
+enum DeliveryStatus {
+  sent
+  failed
+}
+
+// RSSフィード記事
+model FeedArticle {
+  id          String   @id @default(uuid())
+  feedUrl     String   @map("feed_url")
+  title       String
+  url         String   @unique
+  summary     String?
+  publishedAt DateTime @map("published_at")
+  fetchedAt   DateTime @default(now()) @map("fetched_at")
+
+  @@index([feedUrl, publishedAt])
+  @@map("feed_articles")
+}
