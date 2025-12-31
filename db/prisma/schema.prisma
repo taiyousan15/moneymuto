@@ -16,9 +16,8 @@ model User {
   lineUserId        String?   @unique @map("line_user_id")
   displayName       String?   @map("display_name")
   diagnosisId       String?   @unique @map("diagnosis_id")
-  linkCode          String?   @unique @map("link_code")
-  linkCodeExpiresAt DateTime? @map("link_code_expires_at")
   stepDay           Int       @default(0) @map("step_day")
+  stepStartedAt     DateTime? @map("step_started_at")
   lastStepAt        DateTime? @map("last_step_at")
   status            UserStatus @default(pending)
   createdAt         DateTime  @default(now()) @map("created_at")
@@ -39,36 +38,33 @@ enum UserStatus {
 
 // 診断結果
 model Diagnosis {
-  id        String   @id @default(uuid())
-  type      DiagnosisType
-  scores    Json
-  answers   Json
-  createdAt DateTime @default(now()) @map("created_at")
+  id                String    @id @default(uuid())
+  type              String
+  scores            Json
+  answers           Json
+  linkCode          String?   @unique @map("link_code")
+  linkCodeExpiresAt DateTime? @map("link_code_expires_at")
+  userId            String?   @map("user_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
 
   user User?
 
   @@index([type])
+  @@index([linkCode])
   @@index([createdAt])
   @@map("diagnoses")
 }
 
-enum DiagnosisType {
-  conservative
-  balanced
-  aggressive
-  learner
-}
-
 // 配信ログ
 model DeliveryLog {
-  id      String   @id @default(uuid())
-  userId  String   @map("user_id")
-  type    DeliveryType
-  day     Int?
-  content String
-  sentAt  DateTime @default(now()) @map("sent_at")
-  status  DeliveryStatus
-  error   String?
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  type         String   // step, digest, link_complete, etc.
+  day          Int?
+  content      String?
+  sentAt       DateTime @default(now()) @map("sent_at")
+  status       String   // sent, failed
+  errorMessage String?  @map("error_message")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -77,26 +73,19 @@ model DeliveryLog {
   @@map("delivery_logs")
 }
 
-enum DeliveryType {
-  step
-  digest
-}
-
-enum DeliveryStatus {
-  sent
-  failed
-}
-
 // RSSフィード記事
 model FeedArticle {
   id          String   @id @default(uuid())
-  feedUrl     String   @map("feed_url")
-  title       String
   url         String   @unique
+  title       String
+  content     String?
   summary     String?
+  source      String?
+  category    String?
   publishedAt DateTime @map("published_at")
   fetchedAt   DateTime @default(now()) @map("fetched_at")
 
-  @@index([feedUrl, publishedAt])
+  @@index([source, publishedAt])
+  @@index([category])
   @@map("feed_articles")
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import prisma from '@/lib/prisma';
 
 // LINE Webhook署名検証
 function verifySignature(body: string, signature: string): boolean {
@@ -79,22 +80,22 @@ async function handleFollow(userId: string, replyToken: string) {
     },
   ]);
 
-  // DBにユーザー登録（本番で有効化）
-  // await prisma.user.upsert({
-  //   where: { lineUserId: userId },
-  //   create: { lineUserId: userId, status: 'pending' },
-  //   update: { status: 'pending' },
-  // });
+  // DBにユーザー登録
+  await prisma.user.upsert({
+    where: { lineUserId: userId },
+    create: { lineUserId: userId, status: 'pending' },
+    update: { status: 'pending' },
+  });
 }
 
 async function handleUnfollow(userId: string) {
   console.log('User unfollowed:', userId);
 
-  // ステータス更新（本番で有効化）
-  // await prisma.user.update({
-  //   where: { lineUserId: userId },
-  //   data: { status: 'unfollowed' },
-  // });
+  // ステータス更新
+  await prisma.user.updateMany({
+    where: { lineUserId: userId },
+    data: { status: 'unfollowed' },
+  });
 }
 
 async function handleTextMessage(userId: string, text: string, replyToken: string) {
@@ -105,10 +106,11 @@ async function handleTextMessage(userId: string, text: string, replyToken: strin
     await handleLinkCode(userId, trimmedText, replyToken);
   } else {
     // ヘルプメッセージ
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://example.com';
     await sendReply(replyToken, [
       {
         type: 'text',
-        text: '💡 診断結果と紐付けるには、診断完了後に表示される8桁のコードを入力してください。\n\n例: A1B2C3D4\n\nまだ診断を受けていない方は👇\nhttps://your-domain.com',
+        text: `💡 診断結果と紐付けるには、診断完了後に表示される8桁のコードを入力してください。\n\n例: A1B2C3D4\n\nまだ診断を受けていない方は👇\n${appUrl}`,
       },
     ]);
   }
@@ -117,18 +119,73 @@ async function handleTextMessage(userId: string, text: string, replyToken: strin
 async function handleLinkCode(userId: string, code: string, replyToken: string) {
   console.log('Link code attempt:', userId, code);
 
-  // 仮の実装（本番ではDBで検証）
-  // const user = await prisma.user.findFirst({
-  //   where: { linkCode: code, linkCodeExpiresAt: { gt: new Date() } },
-  // });
+  // リンクコードで診断結果を検索
+  const diagnosis = await prisma.diagnosis.findFirst({
+    where: {
+      linkCode: code,
+      linkCodeExpiresAt: { gt: new Date() },
+      userId: null, // まだ紐付けられていない
+    },
+  });
 
-  // 仮の成功レスポンス
+  if (!diagnosis) {
+    await sendReply(replyToken, [
+      {
+        type: 'text',
+        text: '❌ コードが見つからないか、有効期限が切れています。\n\n診断結果ページに表示されている8桁のコードを確認してください。',
+      },
+    ]);
+    return;
+  }
+
+  // タイプ名を取得
+  const typeNames: Record<string, string> = {
+    conservative: '堅実派',
+    balanced: 'バランス派',
+    aggressive: '積極派',
+    learner: '学習派',
+  };
+  const typeName = typeNames[diagnosis.type] || diagnosis.type;
+
+  // ユーザーと診断を紐付け
+  const user = await prisma.user.upsert({
+    where: { lineUserId: userId },
+    create: {
+      lineUserId: userId,
+      diagnosisId: diagnosis.id,
+      status: 'linked',
+      stepDay: 1,
+      stepStartedAt: new Date(),
+    },
+    update: {
+      diagnosisId: diagnosis.id,
+      status: 'linked',
+      stepDay: 1,
+      stepStartedAt: new Date(),
+    },
+  });
+
+  // 診断結果にユーザーIDを設定
+  await prisma.diagnosis.update({
+    where: { id: diagnosis.id },
+    data: { userId: user.id },
+  });
+
   await sendReply(replyToken, [
     {
       type: 'text',
-      text: '✅ 紐付けが完了しました！\n\nあなたは「バランス派」ですね。\n\nこれから10日間、バランス派のあなたに最適な金融知識をお届けします📚\n\nお楽しみに！',
+      text: `✅ 紐付けが完了しました！\n\nあなたは「${typeName}」ですね。\n\nこれから10日間、${typeName}のあなたに最適な金融知識をお届けします📚\n\nお楽しみに！`,
     },
   ]);
+
+  // 配信ログを記録
+  await prisma.deliveryLog.create({
+    data: {
+      userId: user.id,
+      type: 'link_complete',
+      status: 'sent',
+    },
+  });
 }
 
 async function sendReply(replyToken: string, messages: any[]) {

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-// import { PrismaClient } from '@prisma/client';
-// import { runDiagnosis, generateLinkCode } from '@money-onboarding/core';
-// import diagnosisConfig from '../../../../config/diagnosis_questions.json';
-
-// const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
+import { runDiagnosis, generateLinkCode } from '@money-onboarding/core';
+import diagnosisConfig from '../../../../../../config/diagnosis_questions.json';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,39 +16,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 診断を実行（本番では core パッケージを使用）
-    // const result = runDiagnosis(diagnosisConfig, answers);
+    // 診断を実行
+    const result = runDiagnosis(diagnosisConfig as any, answers);
 
-    // 仮の結果（本番ではDBに保存）
-    const result = {
-      id: crypto.randomUUID(),
-      type: 'balanced',
-      typeName: 'バランス派',
-      scores: {
-        safety: 55,
-        growth: 60,
-        knowledge: 50,
-        action: 55,
+    // リンクコード生成
+    const linkCode = generateLinkCode();
+    const linkCodeExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // DBに保存
+    const diagnosis = await prisma.diagnosis.create({
+      data: {
+        type: result.type,
+        scores: result.scores,
+        answers: answers,
+        linkCode,
+        linkCodeExpiresAt,
       },
-      advice: [
-        '分散投資の考え方は正しいです',
-        '定期的なリバランスが重要です',
-        '目標に合わせたポートフォリオ設計を',
-      ],
-      linkCode: generateRandomCode(),
-      linkCodeExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    };
+    });
 
-    // DBに保存（本番で有効化）
-    // const diagnosis = await prisma.diagnosis.create({
-    //   data: {
-    //     type: result.type,
-    //     scores: result.scores,
-    //     answers: answers,
-    //   },
-    // });
-
-    return NextResponse.json(result);
+    return NextResponse.json({
+      id: diagnosis.id,
+      type: result.type,
+      typeName: result.typeName,
+      scores: result.scores,
+      advice: result.advice,
+      linkCode,
+      linkCodeExpiresAt: linkCodeExpiresAt.toISOString(),
+    });
   } catch (error) {
     console.error('Diagnosis error:', error);
     return NextResponse.json(
@@ -60,11 +52,48 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateRandomCode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: { code: 'MISSING_ID', message: 'IDが必要です' } },
+        { status: 400 }
+      );
+    }
+
+    const diagnosis = await prisma.diagnosis.findUnique({
+      where: { id },
+    });
+
+    if (!diagnosis) {
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: '診断結果が見つかりません' } },
+        { status: 404 }
+      );
+    }
+
+    // タイプ情報を取得
+    const typeInfo = (diagnosisConfig as any).types.find(
+      (t: any) => t.id === diagnosis.type
+    );
+
+    return NextResponse.json({
+      id: diagnosis.id,
+      type: diagnosis.type,
+      typeName: typeInfo?.name || diagnosis.type,
+      scores: diagnosis.scores,
+      advice: typeInfo?.advice || [],
+      linkCode: diagnosis.linkCode,
+      createdAt: diagnosis.createdAt,
+    });
+  } catch (error) {
+    console.error('Get diagnosis error:', error);
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'エラーが発生しました' } },
+      { status: 500 }
+    );
   }
-  return code;
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import stepMessages from '../../../../../../../config/step_messages.json';
 
 // Cron認証
 function verifyCronSecret(request: NextRequest): boolean {
@@ -14,6 +15,14 @@ function verifyCronSecret(request: NextRequest): boolean {
   return authHeader === `Bearer ${cronSecret}`;
 }
 
+type DiagnosisType = 'conservative' | 'balanced' | 'aggressive' | 'learner';
+
+interface StepMessage {
+  day: number;
+  subject: string;
+  content: string;
+}
+
 export async function POST(request: NextRequest) {
   // 認証チェック
   if (!verifyCronSecret(request)) {
@@ -24,21 +33,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const dryRun = body.dryRun === true;
 
-    console.log(`Starting digest delivery (dryRun: ${dryRun})`);
+    console.log(`Starting step mail delivery (dryRun: ${dryRun})`);
 
-    // 配信対象ユーザー取得（ステップ完了後のユーザー）
+    // 配信対象ユーザー取得
+    // - ステータスがlinked
+    // - stepDayが1〜10
+    // - 今日まだ配信していない（lastStepAtが今日より前）
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const users = await prisma.user.findMany({
       where: {
         status: 'linked',
-        stepDay: { gte: 10 }, // ステップ完了後
+        stepDay: { gte: 1, lte: 10 },
         lineUserId: { not: null },
+        OR: [
+          { lastStepAt: null },
+          { lastStepAt: { lt: today } },
+        ],
       },
       include: {
         diagnosis: true,
       },
     });
 
-    console.log(`Found ${users.length} users for digest delivery`);
+    console.log(`Found ${users.length} users for step mail delivery`);
 
     let sent = 0;
     let failed = 0;
@@ -46,28 +65,54 @@ export async function POST(request: NextRequest) {
 
     for (const user of users) {
       try {
-        // ユーザー名取得（LINEプロフィールから）
+        // 診断タイプを取得（デフォルトはbalanced）
+        const diagnosisType = (user.diagnosis?.type as DiagnosisType) || 'balanced';
+
+        // ステップメッセージを取得
+        const messages = (stepMessages.messages as Record<DiagnosisType, StepMessage[]>)[diagnosisType];
+        const stepMessage = messages?.find((m) => m.day === user.stepDay);
+
+        if (!stepMessage) {
+          console.warn(`No message found for type ${diagnosisType} day ${user.stepDay}`);
+          continue;
+        }
+
+        // ユーザー名取得
         const displayName = await getLineDisplayName(user.lineUserId!);
 
-        // ダイジェストメッセージ作成
-        const message = createDigestMessage(displayName || 'ユーザー');
+        // メッセージをパーソナライズ
+        const personalizedContent = stepMessage.content.replace(
+          /おはようございます！/,
+          `${displayName || 'ユーザー'}さん、おはようございます！`
+        );
 
         if (!dryRun) {
           // LINE送信
-          await sendPushMessage(user.lineUserId!, message);
+          await sendPushMessage(user.lineUserId!, personalizedContent);
+
+          // ユーザー情報更新
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              stepDay: user.stepDay + 1,
+              lastStepAt: new Date(),
+            },
+          });
 
           // 配信ログ保存
           await prisma.deliveryLog.create({
             data: {
               userId: user.id,
-              type: 'digest',
+              type: 'step',
+              day: user.stepDay,
+              content: stepMessage.subject,
               status: 'sent',
             },
           });
         }
 
         sent++;
-        console.log(`Sent digest to ${user.id}`);
+        console.log(`Sent step ${user.stepDay} to ${user.id} (${diagnosisType})`);
       } catch (error) {
         failed++;
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -75,14 +120,15 @@ export async function POST(request: NextRequest) {
           userId: user.id,
           error: errorMessage,
         });
-        console.error(`Failed to send digest to ${user.id}:`, error);
+        console.error(`Failed to send step mail to ${user.id}:`, error);
 
         // エラーログ保存
         if (!dryRun) {
           await prisma.deliveryLog.create({
             data: {
               userId: user.id,
-              type: 'digest',
+              type: 'step',
+              day: user.stepDay,
               status: 'failed',
               errorMessage,
             },
@@ -99,7 +145,7 @@ export async function POST(request: NextRequest) {
       dryRun,
     });
   } catch (error) {
-    console.error('Digest cron error:', error);
+    console.error('Step mail cron error:', error);
     return NextResponse.json(
       { error: 'Internal error' },
       { status: 500 }
@@ -130,33 +176,6 @@ async function getLineDisplayName(lineUserId: string): Promise<string | null> {
   }
 }
 
-function createDigestMessage(userName: string): string {
-  return `📰 今週の金融ニュースダイジェスト
-
-${userName}さん、
-今週も重要なニュースをまとめました！
-
-━━━━━━━━━━━━━━━━
-
-■ 日経平均株価、3万円台を回復
-
-東京株式市場で日経平均株価が3万円台を回復しました。
-
-👉 詳しく読む
-
-━━━━━━━━━━━━━━━━
-
-■ 日銀、金融政策を維持
-
-日本銀行は金融政策決定会合で現行の金融緩和策の維持を決定しました。
-
-👉 詳しく読む
-
-━━━━━━━━━━━━━━━━
-
-来週もお届けします！`;
-}
-
 async function sendPushMessage(lineUserId: string, text: string) {
   const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   if (!accessToken) {
@@ -176,6 +195,7 @@ async function sendPushMessage(lineUserId: string, text: string) {
   });
 
   if (!response.ok) {
-    throw new Error(`LINE API error: ${response.status}`);
+    const errorBody = await response.text();
+    throw new Error(`LINE API error: ${response.status} - ${errorBody}`);
   }
 }
